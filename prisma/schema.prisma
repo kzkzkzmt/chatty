@@ -1,15 +1,123 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  messages    Message[]
+  roomMembers RoomMember[]
+  fileVersions FileVersion[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  messages    Message[]
+  members     RoomMember[]
+  files       File[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  id     String @id @default(cuid())
+  userId String
+  roomId String
+  role   String @default("member") // member, admin
+  joinedAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@map("room_members")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  roomId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model File {
+  id           String   @id @default(cuid())
+  name         String   // 表示名（同じファイルの更新版も同じ名前）
+  originalName String   // 元のファイル名
+  roomId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  room     Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  versions FileVersion[]
+
+  @@map("files")
+}
+
+model FileVersion {
+  id           String   @id @default(cuid())
+  fileId       String
+  version      String   // v1.0, v1.1, v1.2 など
+  fileName     String   // 実際のファイル名（ストレージ内）
+  originalName String   // アップロード時のオリジナル名
+  size         Int
+  mimeType     String
+  s3Key        String?  // S3のキー
+  comment      String?  // バージョンコメント
+  hash         String   // ファイルのハッシュ値（重複チェック用）
+  userId       String   // アップロードしたユーザー
+  createdAt    DateTime @default(now())
+
+  // Relations
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("file_versions")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // mention, file_update
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
