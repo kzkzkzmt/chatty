@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
     "dev:next": "next dev --turbopack",
     "setup": "node setup.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

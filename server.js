@@ -5,7 +5,7 @@ const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const hostname = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
 const port = process.env.PORT || 3000
 
 const app = next({ dev, hostname, port })
@@ -25,8 +25,9 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: dev ? ['http://localhost:3000'] : false,
+      origin: dev ? ['http://localhost:3000'] : true,
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   })
 
@@ -39,7 +40,7 @@ app.prepare().then(() => {
     }
 
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret')
+      const payload = jwt.verify(token, process.env.JWT_SECRET || 'construction-chat-default-secret-key-change-in-production')
       socket.data.userId = payload.userId
       socket.data.userEmail = payload.email
       next()
