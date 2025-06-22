@@ -5,6 +5,15 @@ const prisma = new PrismaClient()
 
 async function main() {
   console.log('🚀 セットアップを開始しています...')
+  
+  // Check database connection
+  try {
+    await prisma.$connect()
+    console.log('✅ データベース接続成功')
+  } catch (error) {
+    console.error('❌ データベース接続エラー:', error)
+    throw error
+  }
 
   try {
     // テストユーザーの作成
