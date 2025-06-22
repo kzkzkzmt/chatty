@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:reset": "prisma migrate reset",
+    "db:init": "prisma migrate deploy && node setup.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
